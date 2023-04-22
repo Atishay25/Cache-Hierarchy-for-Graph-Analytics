@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "$#" -ne 7 ]; then
+if [ "$#" -ne 8 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./build_champsim.sh [branch_pred] [l1i_pref] [l1d_pref] [l2c_pref] [llc_pref] [llc_repl] [num_core]"
+    echo "Usage: ./build_champsim.sh [branch_pred] [l1i_pref] [l1d_pref] [l2c_pref] [llc_pref] [llc_repl] [num_core] [cache_hierarchy]"
     exit 1
 fi
 
@@ -14,6 +14,7 @@ L2C_PREFETCHER=$4   # prefetcher/*.l2c_pref
 LLC_PREFETCHER=$5   # prefetcher/*.llc_pref
 LLC_REPLACEMENT=$6  # replacement/*.llc_repl
 NUM_CORE=$7         # tested up to 8-core system
+CACHE=$8
 
 ############## Some useful macros ###############
 BOLD=$(tput bold)
@@ -63,6 +64,13 @@ if [ ! -f ./replacement/${LLC_REPLACEMENT}.llc_repl ]; then
     exit 1
 fi
 
+if [ ! -f ./cache_hierarchies/${CACHE}.llc_repl ]; then
+    echo "[ERROR] Cannot find LLC replacement policy"
+	echo "[ERROR] Possible LLC replacement policy from replacement/*.llc_repl"
+    find replacement -name "*.llc_repl"
+    exit 1
+fi
+
 # Check num_core
 re='^[0-9]+$'
 if ! [[ $NUM_CORE =~ $re ]] ; then
@@ -93,6 +101,7 @@ cp prefetcher/${L1D_PREFETCHER}.l1d_pref prefetcher/l1d_prefetcher.cc
 cp prefetcher/${L2C_PREFETCHER}.l2c_pref prefetcher/l2c_prefetcher.cc
 cp prefetcher/${LLC_PREFETCHER}.llc_pref prefetcher/llc_prefetcher.cc
 cp replacement/${LLC_REPLACEMENT}.llc_repl replacement/llc_replacement.cc
+cp cache_hierarchies/${CACHE}.cc src/cache.cc
 
 # Build
 mkdir -p bin
@@ -133,3 +142,4 @@ cp prefetcher/no.l1d_pref prefetcher/l1d_prefetcher.cc
 cp prefetcher/no.l2c_pref prefetcher/l2c_prefetcher.cc
 cp prefetcher/no.llc_pref prefetcher/llc_prefetcher.cc
 cp replacement/lru.llc_repl replacement/llc_replacement.cc
+cp cache_hierarchies/cache.cc src/cache.cc

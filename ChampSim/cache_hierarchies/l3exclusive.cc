@@ -99,7 +99,7 @@ void CACHE::handle_fill()
           writeback_packet.ip = 0; // writeback does not have ip
           writeback_packet.type = WRITEBACK;
           writeback_packet.event_cycle = current_core_cycle[fill_cpu];
-          writeback_packet.dirty_block = block[set][way].dirty;
+          writeback_packet.is_dirty = block[set][way].dirty;
 
           lower_level->add_wq(&writeback_packet);
         }
@@ -194,6 +194,7 @@ void CACHE::handle_fill()
           writeback_packet.ip = 0; // writeback does not have ip
           writeback_packet.type = WRITEBACK;
           writeback_packet.event_cycle = current_core_cycle[fill_cpu];
+		  writeback_packet.is_dirty = 1;
 
           lower_level->add_wq(&writeback_packet);
         }
@@ -348,7 +349,11 @@ void CACHE::handle_writeback()
       sim_access[writeback_cpu][WQ.entry[index].type]++;
 
       // mark dirty
-      block[set][way].dirty = 1;
+	  block[set][way].dirty = 1;
+	  if(cache_type == IS_LLC){
+		  block[set][way].dirty = WQ.entry[WQ.head].is_dirty;
+	  }
+
 
       if (cache_type == IS_ITLB)
         WQ.entry[index].instruction_pa = block[set][way].data;
@@ -551,6 +556,7 @@ void CACHE::handle_writeback()
               writeback_packet.ip = 0;
               writeback_packet.type = WRITEBACK;
               writeback_packet.event_cycle = current_core_cycle[writeback_cpu];
+			  writeback_packet.is_dirty = 1;
 
               lower_level->add_wq(&writeback_packet);
             }
@@ -564,6 +570,44 @@ void CACHE::handle_writeback()
           }
 #endif
         }
+
+		if(do_fill && cache_type == IS_L2C && block[set][way].dirty == 0){
+			// copy back victim to L3
+			// check if the lower level WQ has enough room to keep this writeback request
+			if (lower_level)
+			{
+				if (lower_level->get_occupancy(2, block[set][way].address) == lower_level->get_size(2, block[set][way].address))
+				{
+
+					// lower level WQ is full, cannot replace this victim
+					do_fill = 0;
+					lower_level->increment_WQ_FULL(block[set][way].address);
+					STALL[MSHR.entry[mshr_index].type]++;
+
+					DP(if (warmup_complete[fill_cpu]) {
+							cout << "[" << NAME << "] " << __func__ << "do_fill: " << +do_fill;
+							cout << " lower level wq is full!" << " fill_addr: " << hex << MSHR.entry[mshr_index].address;
+							cout << " victim_addr: " << block[set][way].tag << dec << endl; });
+				}
+				else
+				{
+					PACKET writeback_packet;
+
+					writeback_packet.fill_level = fill_level << 1;
+					writeback_packet.cpu = fill_cpu;
+					writeback_packet.address = block[set][way].address;
+					writeback_packet.full_addr = block[set][way].full_addr;
+					writeback_packet.data = block[set][way].data;
+					writeback_packet.instr_id = MSHR.entry[mshr_index].instr_id;
+					writeback_packet.ip = 0; // writeback does not have ip
+					writeback_packet.type = WRITEBACK;
+					writeback_packet.event_cycle = current_core_cycle[fill_cpu];
+					writeback_packet.is_dirty = block[set][way].dirty;
+
+					lower_level->add_wq(&writeback_packet);
+				}
+			}
+		}
 
         if (do_fill)
         {
@@ -595,10 +639,14 @@ void CACHE::handle_writeback()
           sim_miss[writeback_cpu][WQ.entry[index].type]++;
           sim_access[writeback_cpu][WQ.entry[index].type]++;
 
+
           fill_cache(set, way, &WQ.entry[index]);
 
           // mark dirty
           block[set][way].dirty = 1;
+		  if(cache_type == IS_LLC){
+			  block[set][way].dirty = WQ.entry[WQ.head].is_dirty;
+		  }
 
           // check fill level
           if (WQ.entry[index].fill_level < fill_level)

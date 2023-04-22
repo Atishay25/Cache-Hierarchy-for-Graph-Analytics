@@ -148,7 +148,7 @@ void CACHE::handle_fill()
               if (l1dstatus == 3 && l1istatus == 3){
                 if (l2status==2 || block[set][way].dirty){
                   //Send data from L2 to memory
-                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                   if (do_fill == 0){
                     STALL[MSHR.entry[mshr_index].type]++;
                     break;
@@ -176,7 +176,7 @@ void CACHE::handle_fill()
               }
               if(l1status == 2){
                 //L1 is dirty, move L1 data to DRAM and invalidate from all caches
-                do_fill = l1container->writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                do_fill = l1container->writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                 if(do_fill==0){
                   STALL[MSHR.entry[mshr_index].type]++;
                   break;
@@ -189,7 +189,7 @@ void CACHE::handle_fill()
                 // L1 is clean
                 if(l2status ==2 ){
                   // L2 is dirty, send from L2 to memory, invalidate in all caches 
-                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                   if(do_fill==0){
                     STALL[MSHR.entry[mshr_index].type]++;
                     break;
@@ -201,7 +201,7 @@ void CACHE::handle_fill()
                 }else{
                   if(block[set][way].dirty){
                     // LLC to DRAM, set invalid in all caches
-                    do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                    do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                     if(do_fill==0){
                       STALL[MSHR.entry[mshr_index].type]++;
                       break;
@@ -224,7 +224,7 @@ void CACHE::handle_fill()
               //LLC invalid
               //Send to memory if LLC Dirty
               if (block[set][way].dirty){
-                do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                 if(do_fill==0){
                   STALL[MSHR.entry[mshr_index].type]++;
                 }
@@ -239,6 +239,55 @@ void CACHE::handle_fill()
           } 
           else{
             // assert(0);
+          }
+        }
+        if (cache_type==IS_L2C){
+          int l1Dstatus = ooo_cpu[fill_cpu].L1D.entry_type(block[set][way].address);
+          int l1Istatus = ooo_cpu[fill_cpu].L1I.entry_type(block[set][way].address);
+          int l1status;
+          CACHE* l1container;
+          if (l1Dstatus==3){
+            l1container = &ooo_cpu[fill_cpu].L1I;
+            l1status = l1Istatus;
+          }
+          else{
+            l1container = &ooo_cpu[fill_cpu].L1D;
+            l1status = l1Dstatus;
+          }
+          if (block[set][way].valid){
+            if (l1status==3){
+              if(!block[set][way].dirty){
+                //invalidate L2
+                do_fill = ooo_cpu[fill_cpu].L2C.invalidate_entry(block[set][way].address);
+              }
+              else{
+                //Send L2 to L3
+                //invalidate L2
+                do_fill = ooo_cpu[fill_cpu].L2C.writeback_to_memory(fill_cpu,block[set][way].address,block[set][way].instr_id,1);
+                if(do_fill==0)
+                  STALL[MSHR.entry[mshr_index].type]++;
+                else
+                  ooo_cpu[fill_cpu].L2C.invalidate_entry(block[set][way].address);
+              }
+            }
+            if(!block[set][way].dirty && l1status==1){
+              //invalidate l1 and l2
+              l1container->invalidate_entry(block[set][way].address);
+              ooo_cpu[fill_cpu].L2C.invalidate_entry(block[set][way].address);
+            }
+            else{
+              //send L1 to LLC
+              //Invalidate L1 and L2
+              do_fill = l1container->writeback_to_memory(fill_cpu,block[set][way].address,block[set][way].instr_id,1);
+              if(do_fill==0)
+                STALL[MSHR.entry[mshr_index].type]++;
+              else{
+                ooo_cpu[fill_cpu].L2C.invalidate_entry(block[set][way].address);
+                l1container->invalidate_entry(block[set][way].address);
+              }
+            }
+          }else {
+            assert(l1status==3);
           }
         }
 

@@ -183,7 +183,7 @@ class CACHE : public MEMORY {
          prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int prefetch_fill_level, uint32_t prefetch_metadata),
          kpc_prefetch_line(uint64_t base_addr, uint64_t pf_addr, int prefetch_fill_level, int delta, int depth, int signature, int confidence, uint32_t prefetch_metadata),
          entry_type(uint64_t inval_addr),
-         writeback_to_memory(uint32_t fill_cpu,uint64_t address,uint32_t instr_id);
+         writeback_to_memory(uint32_t fill_cpu,uint64_t address,uint32_t instr_id, int isllc);
 
     void handle_fill(),
          handle_writeback(),

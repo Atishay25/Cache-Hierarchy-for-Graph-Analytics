@@ -1,3 +1,5 @@
 traces/*
 ChampSim/bin/
 ChampSim/obj/
+ChampSim/dpc3_traces
+ChampSim/results_*

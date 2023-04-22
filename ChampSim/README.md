@@ -11,11 +11,11 @@ git clone https://github.com/ChampSim/ChampSim.git
 # Compile
 
 ChampSim takes seven parameters: Branch predictor, L1I prefetcher, L1D prefetcher, L2C prefetcher, LLC prefetcher, LLC replacement policy, and the number of cores. 
-For example, `./build_champsim.sh bimodal no no no next_line lru 1` builds a single-core processor with bimodal branch predictor, no L1 instruction prefetcher, no L1/L2 data prefetchers, ip-stride LLC prefetcher and the baseline LRU replacement policy for the LLC.
+For example, `./build_champsim.sh bimodal no no no next_line lru 1 cache` builds a single-core processor with bimodal branch predictor, non-inclusive cache hierarchy, no L1 instruction prefetcher, no L1/L2 data prefetchers, ip-stride LLC prefetcher and the baseline LRU replacement policy for the LLC.
 ```
-$ ./build_champsim.sh bimodal no no no next_line lru 1
+$ ./build_champsim.sh bimodal no no no next_line lru 1 cache
 
-$ ./build_champsim.sh ${BRANCH} ${L1I_PREFETCHER} ${L1D_PREFETCHER} ${L2C_PREFETCHER} ${LLC_PREFETCHER} ${LLC_REPLACEMENT} ${NUM_CORE}
+$ ./build_champsim.sh ${BRANCH} ${L1I_PREFETCHER} ${L1D_PREFETCHER} ${L2C_PREFETCHER} ${LLC_PREFETCHER} ${LLC_REPLACEMENT} ${NUM_CORE} ${CACHE}
 ```
 
 # Download DPC-3 trace

@@ -1,8 +1,46 @@
 #include "cache.h"
 #include "set.h"
 #include "ooo_cpu.h"
+#include "uncore.h"
 
 uint64_t l2pf_access = 0;
+
+
+
+int CACHE::writeback_to_memory(uint32_t fill_cpu,uint64_t address,uint32_t instr_id){
+  int do_fill = 1;
+  uint32_t set = get_set(address);
+  uint32_t way = get_way(address, set);
+
+  if (uncore.DRAM.get_occupancy(2, address) == uncore.DRAM.get_size(2, address)) {
+
+    // lower level WQ is full, cannot replace this victim
+    do_fill = 0;
+    uncore.DRAM.increment_WQ_FULL(address);
+    // Pending -> Update this where function is getting called
+    // STALL[MSHR.entry[mshr_index].type]++;
+
+    DP ( if (warmup_complete[fill_cpu]) {
+    cout << "[" << NAME << "] " << __func__ << "do_fill: " << +do_fill;
+    cout << " lower level wq is full!" << " fill_addr: " << hex << MSHR.entry[mshr_index].address;
+    cout << " victim_addr: " << block[set][way].tag << dec << endl; });
+  }else {
+      PACKET writeback_packet;
+
+      writeback_packet.fill_level = FILL_DRAM;
+      writeback_packet.cpu = fill_cpu;
+      writeback_packet.address = block[set][way].address;
+      writeback_packet.full_addr = block[set][way].full_addr;
+      writeback_packet.data = block[set][way].data;
+      writeback_packet.instr_id = instr_id;
+      writeback_packet.ip = 0; // writeback does not have ip
+      writeback_packet.type = WRITEBACK;
+      writeback_packet.event_cycle = current_core_cycle[fill_cpu];
+
+      uncore.DRAM.add_wq(&writeback_packet);
+  }
+  return do_fill;
+}
 
 void CACHE::handle_fill()
 {
@@ -87,23 +125,32 @@ void CACHE::handle_fill()
           if (block[set][way].valid) {
             int l2found = 0;
             for ( int i = 0 ; i < NUM_CPUS ; i++ ){
-              int l2status = ooo_cpu[i].L2C.entry_type(MSHR.entry[mshr_index].full_addr);
+              int l2status = ooo_cpu[i].L2C.entry_type(MSHR.entry[mshr_index].address);
               if (l2status==3){
                 //Sanity Check
-                //Pending
                 continue;
               }
               l2found = 1;
-              int l1dstatus = ooo_cpu[i].L1D.entry_type(MSHR.entry[mshr_index].full_addr);
-              int l1istatus = ooo_cpu[i].L1I.entry_type(MSHR.entry[mshr_index].full_addr);
+              int l1dstatus = ooo_cpu[i].L1D.entry_type(MSHR.entry[mshr_index].address);
+              int l1istatus = ooo_cpu[i].L1I.entry_type(MSHR.entry[mshr_index].address);
               if (l1dstatus == 3 && l1istatus == 3){
                 if (l2status==2 || block[set][way].dirty){
                   //Send data from L2 to memory
+                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                  if (do_fill == 0){
+                    STALL[MSHR.entry[mshr_index].type]++;
+                    break;
+                  }
                   //Invalidate L2 and LLC
+                  uncore.LLC.invalidate_entry(block[set][way].address);
+                  ooo_cpu[i].L2C.invalidate_entry(block[set][way].address);
                   break;
                 }
                 else{
                   //Invalidate L2 and LLC
+                  uncore.LLC.invalidate_entry(block[set][way].address);
+                  ooo_cpu[i].L2C.invalidate_entry(block[set][way].address);
+                  break;
                 }
               }
               CACHE* l1container;
@@ -116,18 +163,47 @@ void CACHE::handle_fill()
                 l1status = l1dstatus;
               }
               if(l1status == 2){
-                // L1 is dirty, move L1 data to DRAM and invalidate from all caches
+                //L1 is dirty, move L1 data to DRAM and invalidate from all caches
+                do_fill = l1container->writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                if(do_fill==0){
+                  STALL[MSHR.entry[mshr_index].type]++;
+                  break;
+                }
+                l1container->invalidate_entry(block[set][way].address);
+                ooo_cpu[i].L2C.invalidate_entry(block[set][way].address);
+                uncore.LLC.invalidate_entry(block[set][way].address);
                 break;
               }else{
                 // L1 is clean
                 if(l2status ==2 ){
                   // L2 is dirty, send from L2 to memory, invalidate in all caches 
+                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                  if(do_fill==0){
+                    STALL[MSHR.entry[mshr_index].type]++;
+                    break;
+                  }
+                  l1container->invalidate_entry(block[set][way].address);
+                  ooo_cpu[i].L2C.invalidate_entry(block[set][way].address);
+                  uncore.LLC.invalidate_entry(block[set][way].address);
                   break;
                 }else{
                   if(block[set][way].dirty){
                     // LLC to DRAM, set invalid in all caches
+                    do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                    if(do_fill==0){
+                      STALL[MSHR.entry[mshr_index].type]++;
+                      break;
+                    }
+                    l1container->invalidate_entry(block[set][way].address);
+                    ooo_cpu[i].L2C.invalidate_entry(block[set][way].address);
+                    uncore.LLC.invalidate_entry(block[set][way].address);
+                    break;
                   }else{
                     // Set invalid in all caches
+                    l1container->invalidate_entry(block[set][way].address);
+                    ooo_cpu[i].L2C.invalidate_entry(block[set][way].address);
+                    uncore.LLC.invalidate_entry(block[set][way].address);
+                    break;
                   }
                 }
               }
@@ -135,8 +211,19 @@ void CACHE::handle_fill()
             if (l2found==0){
               //LLC invalid
               //Send to memory if LLC Dirty
+              if (block[set][way].dirty){
+                do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                if(do_fill==0){
+                  STALL[MSHR.entry[mshr_index].type]++;
+                }
+                else{
+                  uncore.LLC.invalidate_entry(block[set][way].address);
+                }
+              }
+              else{
+                uncore.LLC.invalidate_entry(block[set][way].address);
+              }
             }
-
           } 
           else{
             assert(0);
@@ -144,46 +231,46 @@ void CACHE::handle_fill()
         }
 
         // is this dirty?
-        if (block[set][way].dirty) {
+//         if (block[set][way].dirty) {
 
-            // check if the lower level WQ has enough room to keep this writeback request
-            if (lower_level) {
-                if (lower_level->get_occupancy(2, block[set][way].address) == lower_level->get_size(2, block[set][way].address)) {
+//             // check if the lower level WQ has enough room to keep this writeback request
+//             if (lower_level) {
+//                 if (lower_level->get_occupancy(2, block[set][way].address) == lower_level->get_size(2, block[set][way].address)) {
 
-                    // lower level WQ is full, cannot replace this victim
-                    do_fill = 0;
-                    lower_level->increment_WQ_FULL(block[set][way].address);
-                    STALL[MSHR.entry[mshr_index].type]++;
+//                     // lower level WQ is full, cannot replace this victim
+//                     do_fill = 0;
+//                     lower_level->increment_WQ_FULL(block[set][way].address);
+//                     STALL[MSHR.entry[mshr_index].type]++;
 
-                    DP ( if (warmup_complete[fill_cpu]) {
-                    cout << "[" << NAME << "] " << __func__ << "do_fill: " << +do_fill;
-                    cout << " lower level wq is full!" << " fill_addr: " << hex << MSHR.entry[mshr_index].address;
-                    cout << " victim_addr: " << block[set][way].tag << dec << endl; });
-                }
-                else {
-                    PACKET writeback_packet;
+//                     DP ( if (warmup_complete[fill_cpu]) {
+//                     cout << "[" << NAME << "] " << __func__ << "do_fill: " << +do_fill;
+//                     cout << " lower level wq is full!" << " fill_addr: " << hex << MSHR.entry[mshr_index].address;
+//                     cout << " victim_addr: " << block[set][way].tag << dec << endl; });
+//                 }
+//                 else {
+//                     PACKET writeback_packet;
 
-                    writeback_packet.fill_level = fill_level << 1;
-                    writeback_packet.cpu = fill_cpu;
-                    writeback_packet.address = block[set][way].address;
-                    writeback_packet.full_addr = block[set][way].full_addr;
-                    writeback_packet.data = block[set][way].data;
-                    writeback_packet.instr_id = MSHR.entry[mshr_index].instr_id;
-                    writeback_packet.ip = 0; // writeback does not have ip
-                    writeback_packet.type = WRITEBACK;
-                    writeback_packet.event_cycle = current_core_cycle[fill_cpu];
+//                     writeback_packet.fill_level = fill_level << 1;
+//                     writeback_packet.cpu = fill_cpu;
+//                     writeback_packet.address = block[set][way].address;
+//                     writeback_packet.full_addr = block[set][way].full_addr;
+//                     writeback_packet.data = block[set][way].data;
+//                     writeback_packet.instr_id = MSHR.entry[mshr_index].instr_id;
+//                     writeback_packet.ip = 0; // writeback does not have ip
+//                     writeback_packet.type = WRITEBACK;
+//                     writeback_packet.event_cycle = current_core_cycle[fill_cpu];
 
-                    lower_level->add_wq(&writeback_packet);
-                }
-            }
-#ifdef SANITY_CHECK
-            else {
-                // sanity check
-                if (cache_type != IS_STLB)
-                    assert(0);
-            }
-#endif
-        }
+//                     lower_level->add_wq(&writeback_packet);
+//                 }
+//             }
+// #ifdef SANITY_CHECK
+//             else {
+//                 // sanity check
+//                 if (cache_type != IS_STLB)
+//                     assert(0);
+//             }
+// #endif
+//         }
 
         if (do_fill){
             // update prefetcher

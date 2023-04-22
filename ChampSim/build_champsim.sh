@@ -64,10 +64,10 @@ if [ ! -f ./replacement/${LLC_REPLACEMENT}.llc_repl ]; then
     exit 1
 fi
 
-if [ ! -f ./cache_hierarchies/${CACHE}.llc_repl ]; then
-    echo "[ERROR] Cannot find LLC replacement policy"
-	echo "[ERROR] Possible LLC replacement policy from replacement/*.llc_repl"
-    find replacement -name "*.llc_repl"
+if [ ! -f ./cache_hierarchies/${CACHE}.cc ]; then
+    echo "[ERROR] Cannot find Cache Hierarchy File"
+	echo "[ERROR] Possible Cache Hierarchy from cache_hierarchies/*.cc"
+    find cache_hierarchies -name "*.cc"
     exit 1
 fi
 

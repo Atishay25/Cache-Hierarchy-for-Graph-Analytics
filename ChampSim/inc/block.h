@@ -73,7 +73,8 @@ class PACKET {
             translated,
             fetched,
             prefetched,
-            drc_tag_read;
+            drc_tag_read,
+			is_dirty;
 
     int fill_level, 
         pf_origin_level,
@@ -166,6 +167,7 @@ class PACKET {
         ip = 0;
         event_cycle = UINT64_MAX;
 	cycle_enqueued = 0;
+		is_dirty = 1;
     };
 };
 

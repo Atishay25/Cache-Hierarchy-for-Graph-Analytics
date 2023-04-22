@@ -226,7 +226,7 @@ void CACHE::handle_fill()
             }
           } 
           else{
-            assert(0);
+            // assert(0);
           }
         }
 

@@ -148,7 +148,7 @@ void CACHE::handle_fill()
               if (l1dstatus == 3 && l1istatus == 3){
                 if (l2status==2 || block[set][way].dirty){
                   //Send data from L2 to memory
-                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                   if (do_fill == 0){
                     STALL[MSHR.entry[mshr_index].type]++;
                     break;
@@ -176,7 +176,7 @@ void CACHE::handle_fill()
               }
               if(l1status == 2){
                 //L1 is dirty, move L1 data to DRAM and invalidate from all caches
-                do_fill = l1container->writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                do_fill = l1container->writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                 if(do_fill==0){
                   STALL[MSHR.entry[mshr_index].type]++;
                   break;
@@ -189,7 +189,7 @@ void CACHE::handle_fill()
                 // L1 is clean
                 if(l2status ==2 ){
                   // L2 is dirty, send from L2 to memory, invalidate in all caches 
-                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                  do_fill = ooo_cpu[i].L2C.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                   if(do_fill==0){
                     STALL[MSHR.entry[mshr_index].type]++;
                     break;
@@ -201,7 +201,7 @@ void CACHE::handle_fill()
                 }else{
                   if(block[set][way].dirty){
                     // LLC to DRAM, set invalid in all caches
-                    do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                    do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                     if(do_fill==0){
                       STALL[MSHR.entry[mshr_index].type]++;
                       break;
@@ -224,7 +224,7 @@ void CACHE::handle_fill()
               //LLC invalid
               //Send to memory if LLC Dirty
               if (block[set][way].dirty){
-                do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address);
+                do_fill = uncore.LLC.writeback_to_memory(fill_cpu,MSHR.entry[mshr_index].instr_id,block[set][way].address,0);
                 if(do_fill==0){
                   STALL[MSHR.entry[mshr_index].type]++;
                 }

@@ -28,6 +28,7 @@ class BLOCK {
 
     // replacement state
     uint32_t lru;
+    uint32_t fre;
 
     BLOCK() {
         valid = 0;

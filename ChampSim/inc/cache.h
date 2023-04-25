@@ -175,7 +175,8 @@ class CACHE : public MEMORY {
          increment_WQ_FULL(uint64_t address);
 
     uint32_t get_occupancy(uint8_t queue_type, uint64_t address),
-             get_size(uint8_t queue_type, uint64_t address);
+             get_size(uint8_t queue_type, uint64_t address),
+             score(uint32_t set, uint32_t way);
 
     int  check_hit(PACKET *packet),
          invalidate_entry(uint64_t inval_addr),
@@ -189,6 +190,7 @@ class CACHE : public MEMORY {
          handle_writeback(),
          handle_read(),
          handle_prefetch();
+         
 
     void add_mshr(PACKET *packet),
          update_fill_cycle(),

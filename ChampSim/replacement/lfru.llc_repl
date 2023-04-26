@@ -6,13 +6,13 @@ void CACHE::llc_initialize_replacement()
     for (int i = 0 ; i < NUM_SET ; i++ ){
         for ( int j = 0 ; j < NUM_WAY ; j++ ){
             block[i][j].fre = 0;
-            block[i][j].lru = 0;
+            // block[i][j].lru = 0;
         }
     }
 }
 
 uint32_t CACHE::score(uint32_t set, uint32_t way){
-    return NUM_WAY + block[set][way].fre - block[set][way].lru;
+    return 5*(NUM_WAY - block[set][way].lru) + block[set][way].fre;
 }
 
 // find replacement victim

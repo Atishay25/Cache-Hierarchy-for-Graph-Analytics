@@ -11,15 +11,14 @@ There are three common cache hierarchies : inclusive, exclusive and non-inclusiv
 Non-inclusive cache hierarchy was implemented in ChampSim repository we used.
 We implemented [exclusive](ChampSim/cache_hierarchies/exclusive.cc), [l3exclusive](ChampSim/cache_hierarchies/l3exclusive.cc) and [l3inclusive](ChampSim/cache_hierarchies/l3inclusive.cc). l3exclusive and l3inclusive
 cache hierarchies are minor modifications of exclusive and inclusive to reduce strictness
-and make use of their positive effects. The modifications used reduced the overhead of writeback
-in exclusive and used the low L1 miss latency of exclusive hierarchy. Below are more implementation 
-details of the [l3inclusive](ChampSim/cache_hierarchies/l3inclusive.cc) and [l3exclusive](ChampSim/cache_hierarchies/l3exclusive.cc) cache hierarchies.
+and make use of their positive effects. The modifications used reduced the overhead of writeback in exclusive and used the low L1 miss latency of exclusive hierarchy. Below are more implementation details of the [l3inclusive](ChampSim/cache_hierarchies/l3inclusive.cc) and [l3exclusive](ChampSim/cache_hierarchies/l3exclusive.cc) cache hierarchies. We took reference for implementing the policies from [Evaluation of Cache Inclusion Policies in Cache Management A Thesis by Luna Backes Drault](https://core.ac.uk/download/pdf/147122148.pdf)
 
 Here we mention the differences in the policy implemented from non-inclusive policy.
 
 ### Cache Hierarchy - exclusive
 
 - In handle_fill
+  
 	If we are at LLC, it is bypassed and data is sent directly to upper level cache.
 	For L2C or L1I or L1D, the victim is sent to LLC using a writeback packet.
 - In handle_writeback
@@ -33,6 +32,7 @@ Here we mention the differences in the policy implemented from non-inclusive pol
 ### Cache Hierarchy - l3inclusive
 
 - Abstraction 
+  
 	LLC cache is a super set of L1 and L2 caches. No such guarantee is provided for the relation between L1 and L2
 
 - Deletion from LLC
@@ -40,12 +40,11 @@ Here we mention the differences in the policy implemented from non-inclusive pol
 	Data requested from DRAM is received in LLC replacing the victim cache line. This
 	cache is also simultaneously deleted from L1 and L2 caches. If the victim cache
 	line is dirty in L1 or L2 then writeback packet is sent to DRAM accordinly. 
-	The latest copy of the line is present in the highest cache block, so that line is
-	sent as the writeback packet
+	The latest copy of the line is present in the highest cache block, so that line is sent as the writeback packet
+
 - Deletion from L1/L2
 
-	If the cache line is clean then we simply invalidate the line. If the line is dirty
-	in either of the caches, we sent an appropriate writeback message to LLC cache. 
+	If the cache line is clean then we simply invalidate the line. If the line is dirty in either of the caches, we sent an appropriate writeback message to LLC cache. 
 
 ### Cache Hierarchy - l3exclusive
 
@@ -99,7 +98,7 @@ L3inclusive does not show significant performance deviation when changing replac
 
 IPC performance of L3 exclusive varies a lot with different replacement policy. Here is the order:
 
-	Hawkeye $\approx$ LFU $<$ Ship $\lesssim$ DRRIP $<$ Fifo $\approx$ LFU $\approx$ LFRU
+Hawkeye $\approx$ LFU $<$ Ship $\lesssim$ DRRIP $<$ Fifo $\approx$ LFU $\approx$ LFRU
 
 Here is the graph of the comparison of the same.
 
@@ -132,5 +131,7 @@ to an overall better IPC
 | Roll Number | Name |
 | :---: | :---: |
 | 210050026 | Atishay Jain |
-| 210050038 | Chaitanya Agarwal |
+| 210050038 | Chaitanya Aggarwal |
 | 210050085 | Khushang Singla |
+
+

@@ -114,7 +114,7 @@ website to simulate latency value for different cache sizes.
 
 Here is the graph for the comparison.
 
-![Graph for effect of size of LLC](results/llc_size_effect.jpg)
+![Graph for effect of size of LLC](results/llc_size_effect.png)
 
 We can see that the effect of number of ways is negligible. This shows that the number of conflict misses
 is not that large. But the size of LLC had significant effect on IPC.

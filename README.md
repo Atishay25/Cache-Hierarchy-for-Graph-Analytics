@@ -132,5 +132,5 @@ to an overall better IPC
 | Roll Number | Name |
 | :---: | :---: |
 | 210050026 | Atishay Jain |
-| 210050038 | Chaitanya Agarwal |
+| 210050038 | Chaitanya Aggarwal |
 | 210050085 | Khushang Singla |

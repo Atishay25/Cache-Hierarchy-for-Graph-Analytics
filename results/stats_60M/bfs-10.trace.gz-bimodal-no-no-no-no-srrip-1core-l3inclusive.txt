@@ -1,0 +1,82 @@
+
+*** ChampSim Multicore Out-of-Order Simulator ***
+
+Warmup Instructions: 30000000
+Simulation Instructions: 60000000
+Number of CPUs: 1
+LLC sets: 2048
+LLC ways: 16
+Off-chip DRAM Size: 4096 MB Channels: 1 Width: 64-bit Data Rate: 3200 MT/s
+
+CPU 0 runs /home/khushangsingla/Documents/Semester-4/CS230/Project/ChampSim/dpc3_traces/bfs-10.trace.gz
+CPU 0 Bimodal branch predictor
+Initialize SRRIP state
+Heartbeat CPU 0 instructions: 10000002 cycles: 2953978 heartbeat IPC: 3.38527 cumulative IPC: 3.38527 (Simulation time: 0 hr 0 min 5 sec) 
+Heartbeat CPU 0 instructions: 20000003 cycles: 6209810 heartbeat IPC: 3.07141 cumulative IPC: 3.22071 (Simulation time: 0 hr 0 min 16 sec) 
+Heartbeat CPU 0 instructions: 30000000 cycles: 9463946 heartbeat IPC: 3.07301 cumulative IPC: 3.16993 (Simulation time: 0 hr 0 min 26 sec) 
+
+Warmup complete CPU 0 instructions: 30000004 cycles: 9463947 (Simulation time: 0 hr 0 min 26 sec) 
+
+Heartbeat CPU 0 instructions: 40000002 cycles: 43997302 heartbeat IPC: 0.289575 cumulative IPC: 0.289575 (Simulation time: 0 hr 0 min 36 sec) 
+Heartbeat CPU 0 instructions: 50000000 cycles: 78573860 heartbeat IPC: 0.289213 cumulative IPC: 0.289394 (Simulation time: 0 hr 0 min 46 sec) 
+Heartbeat CPU 0 instructions: 60000001 cycles: 124445148 heartbeat IPC: 0.218001 cumulative IPC: 0.260912 (Simulation time: 0 hr 0 min 57 sec) 
+Heartbeat CPU 0 instructions: 70000003 cycles: 180289273 heartbeat IPC: 0.17907 cumulative IPC: 0.234157 (Simulation time: 0 hr 1 min 9 sec) 
+Heartbeat CPU 0 instructions: 80000002 cycles: 224237962 heartbeat IPC: 0.227538 cumulative IPC: 0.232803 (Simulation time: 0 hr 1 min 19 sec) 
+Heartbeat CPU 0 instructions: 90000000 cycles: 233666115 heartbeat IPC: 1.06065 cumulative IPC: 0.267616 (Simulation time: 0 hr 1 min 25 sec) 
+Finished CPU 0 instructions: 60000000 cycles: 224202169 cumulative IPC: 0.267616 (Simulation time: 0 hr 1 min 25 sec) 
+
+ChampSim completed all CPUs
+
+Region of Interest Statistics
+
+CPU 0 cumulative IPC: 0.267616 instructions: 60000000 cycles: 224202169
+L1D TOTAL     ACCESS:   12567930  HIT:   10514097  MISS:    2053833
+L1D LOAD      ACCESS:   11563591  HIT:    9513666  MISS:    2049925
+L1D RFO       ACCESS:    1004339  HIT:    1000431  MISS:       3908
+L1D PREFETCH  ACCESS:          0  HIT:          0  MISS:          0
+L1D WRITEBACK ACCESS:          0  HIT:          0  MISS:          0
+L1D PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:          0  USELESS:          0
+L1D AVERAGE MISS LATENCY: 84.2908 cycles
+L1I TOTAL     ACCESS:   12261380  HIT:   12261376  MISS:          4
+L1I LOAD      ACCESS:   12261380  HIT:   12261376  MISS:          4
+L1I RFO       ACCESS:          0  HIT:          0  MISS:          0
+L1I PREFETCH  ACCESS:          0  HIT:          0  MISS:          0
+L1I WRITEBACK ACCESS:          0  HIT:          0  MISS:          0
+L1I PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:          0  USELESS:          0
+L1I AVERAGE MISS LATENCY: 239.5 cycles
+L2C TOTAL     ACCESS:    2053837  HIT:    1114392  MISS:     939445
+L2C LOAD      ACCESS:    2049929  HIT:    1111004  MISS:     938925
+L2C RFO       ACCESS:       3908  HIT:       3388  MISS:        520
+L2C PREFETCH  ACCESS:          0  HIT:          0  MISS:          0
+L2C WRITEBACK ACCESS:          0  HIT:          0  MISS:          0
+L2C PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:          0  USELESS:          0
+L2C AVERAGE MISS LATENCY: 150.88 cycles
+LLC TOTAL     ACCESS:     939445  HIT:      28072  MISS:     911373
+LLC LOAD      ACCESS:     938925  HIT:      27750  MISS:     911175
+LLC RFO       ACCESS:        520  HIT:        322  MISS:        198
+LLC PREFETCH  ACCESS:          0  HIT:          0  MISS:          0
+LLC WRITEBACK ACCESS:          0  HIT:          0  MISS:          0
+LLC PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:          0  USELESS:          0
+LLC AVERAGE MISS LATENCY: 124.592 cycles
+Major fault: 0 Minor fault: 27075
+
+DRAM Statistics
+ CHANNEL 0
+ RQ ROW_BUFFER_HIT:     435358  ROW_BUFFER_MISS:     476015
+ DBUS_CONGESTED:      13905
+ WQ ROW_BUFFER_HIT:          0  ROW_BUFFER_MISS:          0  FULL:          0
+
+ AVG_CONGESTED_CYCLE: 4
+
+CPU 0 Branch Prediction Accuracy: 84.6529% MPKI: 31.9592 Average ROB Occupancy at Mispredict: 9.72731
+
+Branch types
+NOT_BRANCH: 47505147 79.1752%
+BRANCH_DIRECT_JUMP: 36 6e-05%
+BRANCH_INDIRECT: 0 0%
+BRANCH_CONDITIONAL: 12494447 20.8241%
+BRANCH_DIRECT_CALL: 18 3e-05%
+BRANCH_INDIRECT_CALL: 0 0%
+BRANCH_RETURN: 17 2.83333e-05%
+BRANCH_OTHER: 0 0%
+

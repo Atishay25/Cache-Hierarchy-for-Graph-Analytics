@@ -107,6 +107,26 @@ Here is the graph of the comparison of the same.
 
 More graphs for other traces are present in the file [plot.ipynb](results/plot.ipynb)
 
+## Effect of size of LLC
+
+We ran the simulation for various sizes of LLC with varying associativity in caches for trace of BFS.
+For this simulation, we used the graph from [this](https://www.extremetech.com/extreme/188776-how-l1-and-l2-cpu-caches-work-and-why-theyre-an-essential-part-of-modern-chips#:~:text=Why%20CPU%20Caches%20Keep%20Getting%20Larger) 
+website to simulate latency value for different cache sizes.
+
+Here is the graph for the comparison.
+
+![Graph for effect of size of LLC](results/llc_size_effect.jpg)
+
+We can see that the effect of number of ways is negligible. This shows that the number of conflict misses
+is not that large. But the size of LLC had significant effect on IPC.
+
+When the size was changed from 2 MB to 8 MB, the number of hits did not increase much but the latency increased.
+As a result, the average miss latency of L1 increased and there was a decrease in IPC.
+
+On the other hand, using a 32 MB cache decreased the average miss latency significantly. The number of LLC miss
+decreased significantly (~8 times). This decrease in number of misses more than offset the increase in latency and lead
+to an overall better IPC
+
 ## Team Members
 
 | Roll Number | Name |

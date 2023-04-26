@@ -61,13 +61,16 @@ void CACHE::handle_fill()
         uint64_t current_miss_latency = (current_core_cycle[fill_cpu] - MSHR.entry[mshr_index].cycle_enqueued);
         total_miss_latency += current_miss_latency;
       }
+      // COLLECT STATS
+      sim_miss[fill_cpu][MSHR.entry[mshr_index].type]++;
+      sim_access[fill_cpu][MSHR.entry[mshr_index].type]++;
 
       MSHR.remove_queue(&MSHR.entry[mshr_index]);
       MSHR.num_returned--;
       update_fill_cycle();
       return; // return here, no need to process further in this function
     }
-    else if (cache_type == IS_L2C)
+    else if (cache_type == IS_L2C || cache_type == IS_L1D || cache_type == IS_L1I)
     {
       // copy back victim to L3
       // check if the lower level WQ has enough room to keep this writeback request
@@ -107,7 +110,7 @@ void CACHE::handle_fill()
     }
 
 #ifdef LLC_BYPASS
-    if ((cache_type == IS_LLC) && (way == LLC_WAY))
+    if ((cache_type == IS_LLC) && (way == LLC_WAY)&& cache_type != IS_L1D && cache_type != IS_L1I)
     { // this is a bypass that does not fill the LLC
 
       // update replacement policy
@@ -162,7 +165,7 @@ void CACHE::handle_fill()
 #endif
 
     // is this dirty?
-    if (block[set][way].dirty)
+    if (block[set][way].dirty && cache_type != IS_L2C)
     {
 
       // check if the lower level WQ has enough room to keep this writeback request
